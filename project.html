@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Income Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-100 p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent mb-2">
+                🎰 Poker Income Tracker
+            </h1>
+            <p class="text-gray-400">Sledujte své pokerové výsledky profesionálně</p>
+        </header>
+        <!-- Dashboard Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-6 shadow-2xl">
+                <div class="text-green-100 text-sm mb-1">Celkový Profit</div>
+                <div id="totalProfit" class="text-3xl font-bold">0 Kč</div>
+            </div>
+            <div class="bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl p-6 shadow-2xl">
+                <div class="text-gray-100 text-sm mb-1">ROI</div>
+                <div id="roi" class="text-3xl font-bold">0%</div>
+            </div>
+            <div class="bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl p-6 shadow-2xl">
+                <div class="text-gray-100 text-sm mb-1">Hodinový Výdělek</div>
+                <div id="hourlyRate" class="text-3xl font-bold">0 Kč/h</div>
+            </div>
+        </div>
+        <!-- Form Section -->
+        <div class="bg-gray-800 rounded-xl shadow-2xl p-6 mb-8 border border-gray-700">
+            <h2 class="text-2xl font-bold mb-6 text-green-400">➕ Přidat Session</h2>
+            <form id="sessionForm" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Datum</label>
+                    <input type="date" id="date" required 
+                           class="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-gray-100">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Hra</label>
+                    <select id="game" required 
+                            class="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-gray-100">
+                        <option value="NL Hold'em">NL Hold'em</option>
+                        <option value="PLO">PLO</option>
+                        <option value="Tournament">Tournament</option>
+                        <option value="Sit & Go">Sit & Go</option>
+                        <option value="Mixed">Mixed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Buy-in (Kč)</label>
+                    <input type="number" id="buyin" required min="0" step="1"
+                           class="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-gray-100">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Cashout (Kč)</label>
+                    <input type="number" id="cashout" required min="0" step="1"
+                           class="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-gray-100">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Čas (hodiny)</label>
+                    <input type="number" id="hours" required min="0.1" step="0.1"
+                           class="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-gray-100">
+                </div>
+                <div class="md:col-span-5">
+                    <button type="submit" 
+                            class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200">
+                        💾 Uložit Session
+                    </button>
+                </div>
+            </form>
+        </div>
+        <!-- Sessions Table -->
+        <div class="bg-gray-800 rounded-xl shadow-2xl p-6 border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-green-400">📊 Historie Session</h2>
+                <button id="clearAll" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-semibold transition-colors">
+                    🗑️ Smazat Vše
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-900 border-b-2 border-green-500">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold">Datum</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold">Hra</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Buy-in</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Cashout</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Profit/Loss</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Hodiny</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold">Kč/h</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionsTable" class="divide-y divide-gray-700">
+                        <!-- Sessions will be inserted here -->
+                    </tbody>
+                </table>
+                <div id="emptyState" class="text-center py-12 text-gray-500 hidden">
+                    <div class="text-6xl mb-4">🃏</div>
+                    <p class="text-lg">Zatím žádné session. Přidejte první!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Initialize app
+        let sessions = JSON.parse(localStorage.getItem('pokerSessions')) || [];
+        
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+        // Form submission
+        document.getElementById('sessionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const session = {
+                id: Date.now(),
+                date: document.getElementById('date').value,
+                game: document.getElementById('game').value,
+                buyin: parseFloat(document.getElementById('buyin').value),
+                cashout: parseFloat(document.getElementById('cashout').value),
+                hours: parseFloat(document.getElementById('hours').value)
+            };
+            
+            sessions.push(session);
+            saveSessions();
+            renderSessions();
+            updateStatistics();
+            
+            // Reset form
+            this.reset();
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Show success feedback
+            showNotification('✅ Session úspěšně přidána!');
+        });
+        // Save to localStorage
+        function saveSessions() {
+            localStorage.setItem('pokerSessions', JSON.stringify(sessions));
+        }
+        // Render sessions table
+        function renderSessions() {
+            const tbody = document.getElementById('sessionsTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (sessions.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Sort by date (newest first)
+            const sortedSessions = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sortedSessions.map(session => {
+                const profit = session.cashout - session.buyin;
+                const hourlyRate = session.hours > 0 ? (profit / session.hours) : 0;
+                const profitColor = profit >= 0 ? 'text-green-400' : 'text-gray-400';
+                
+                return `
+                    <tr class="hover:bg-gray-750 transition-colors">
+                        <td class="px-4 py-3 text-sm">${formatDate(session.date)}</td>
+                        <td class="px-4 py-3 text-sm font-medium">${session.game}</td>
+                        <td class="px-4 py-3 text-sm text-right">${formatNumber(session.buyin)} Kč</td>
+                        <td class="px-4 py-3 text-sm text-right">${formatNumber(session.cashout)} Kč</td>
+                        <td class="px-4 py-3 text-sm text-right font-bold ${profitColor}">
+                            ${profit >= 0 ? '+' : ''}${formatNumber(profit)} Kč
+                        </td>
+                        <td class="px-4 py-3 text-sm text-right">${session.hours.toFixed(1)}h</td>
+                        <td class="px-4 py-3 text-sm text-right ${profitColor}">
+                            ${formatNumber(hourlyRate)} Kč/h
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="deleteSession(${session.id})" 
+                                    class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs font-semibold transition-colors">
+                                Smazat
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        // Update statistics
+        function updateStatistics() {
+            const totalBuyin = sessions.reduce((sum, s) => sum + s.buyin, 0);
+            const totalCashout = sessions.reduce((sum, s) => sum + s.cashout, 0);
+            const totalProfit = totalCashout - totalBuyin;
+            const totalHours = sessions.reduce((sum, s) => sum + s.hours, 0);
+            
+            const roi = totalBuyin > 0 ? ((totalProfit / totalBuyin) * 100) : 0;
+            const hourlyRate = totalHours > 0 ? (totalProfit / totalHours) : 0;
+            
+            // Update DOM
+            document.getElementById('totalProfit').textContent = `${totalProfit >= 0 ? '+' : ''}${formatNumber(totalProfit)} Kč`;
+            document.getElementById('totalProfit').classList.toggle('text-white', totalProfit >= 0);
+            document.getElementById('totalProfit').classList.toggle('text-gray-300', totalProfit < 0);
+            
+            document.getElementById('roi').textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`;
+            document.getElementById('hourlyRate').textContent = `${formatNumber(hourlyRate)} Kč/h`;
+        }
+        // Delete session
+        function deleteSession(id) {
+            if (confirm('Opravdu chcete smazat tuto session?')) {
+                sessions = sessions.filter(s => s.id !== id);
+                saveSessions();
+                renderSessions();
+                updateStatistics();
+                showNotification('🗑️ Session smazána');
+            }
+        }
+        // Clear all sessions
+        document.getElementById('clearAll').addEventListener('click', function() {
+            if (confirm('Opravdu chcete smazat VŠECHNY session? Tuto akci nelze vrátit zpět!')) {
+                sessions = [];
+                saveSessions();
+                renderSessions();
+                updateStatistics();
+                showNotification('🗑️ Všechny session smazány');
+            }
+        });
+        // Helper functions
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('cs-CZ');
+        }
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-2xl z-50 animate-pulse';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                setTimeout(() => notification.remove(), 500);
+            }, 2000);
+        }
+        // Initial render
+        renderSessions();
+        updateStatistics();
+    </script>
+</body>
+</html>
