@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Income Tracker</title>
+    <title>Poker Income Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -19,6 +19,16 @@
             </h1>
             <p class="text-xs text-gray-400">Your bankroll</p>
         </header>
+
+        <div class="flex justify-end gap-2 mb-4">
+            <button onclick="exportData()" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded transition">
+                📥 Export JSON
+            </button>
+            <label class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded cursor-pointer transition">
+                📤 Import JSON
+                <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
+            </label>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
             <div class="bg-gradient-to-br from-green-600/20 to-green-700/20 border border-green-500/30 rounded-lg p-4 shadow-lg">
@@ -137,6 +147,37 @@
             updateChart();
         }
 
+        // --- EXPORT FUNKCE ---
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessions));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "poker_data_" + new Date().toISOString().slice(0,10) + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        // --- IMPORT FUNKCE ---
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedSessions = JSON.parse(e.target.result);
+                    if (confirm(`Importovat ${importedSessions.length} záznamů? Tím se přepíšou stávající data.`)) {
+                        sessions = importedSessions;
+                        saveAndRender();
+                    }
+                } catch (err) {
+                    alert("Chyba při čtení souboru. Ujistěte se, že jde o správný JSON soubor.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
         function renderSessions() {
             const tbody = document.getElementById('sessionsTable');
             const emptyState = document.getElementById('emptyState');
@@ -253,6 +294,4 @@
         updateChart();
     </script>
 </body>
-
 </html>
-
